@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: siem-core
+    environment:
+      - cluster.name=siem-cluster
+      - node.name=siem-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+
+  fluent-bit:
+    image: fluent/fluent-bit:2.1.10
+    container_name: log-shipper
+    volumes:
+      - ./config/fluent-bit.conf:/fluent-bit/config/fluent-bit.conf
+      - ./src:/var/log/app
+    depends_on:
+      - opensearch
